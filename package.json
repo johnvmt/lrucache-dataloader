@@ -1,6 +1,6 @@
 {
   "name": "lrucache-dataloader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Resolve dependencies using directed acyclic graph",
   "private": false,
   "author": {
@@ -18,6 +18,6 @@
     "lru-cache": "^9.1.2"
   },
   "devDependencies": {
-    "hash": "^0.2.1"
+    "object-hash": "^3.0.0"
   }
 }
