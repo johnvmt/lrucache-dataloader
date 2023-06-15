@@ -1,0 +1,23 @@
+{
+  "name": "lrucache-dataloader",
+  "version": "1.0.0",
+  "description": "Resolve dependencies using directed acyclic graph",
+  "private": false,
+  "author": {
+    "name": "John Murphy-Teixidor",
+    "email": "johnvmt@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnvmt/component-dependency-resolver.git"
+  },
+  "type": "module",
+  "main": "src/exports.js",
+  "dependencies": {
+    "dataloader": "^2.2.2",
+    "lru-cache": "^9.1.2"
+  },
+  "devDependencies": {
+    "hash": "^0.2.1"
+  }
+}
