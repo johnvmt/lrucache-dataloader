@@ -12,8 +12,9 @@ class TTLItemLRUCacheDataLoader extends DataLoader {
         const mergedLRUCacheOptions = {};
 
         // use "hash" to hash an object used as a key
+        // handle this in the cache instead of the dataloader, as would be standard
         if(options.cacheKeyFn)
-            mergedDataLoaderOptions.cacheKeyFn = options.cacheKeyFn;
+            mergedLRUCacheOptions.keyFn = options.cacheKeyFn;
 
         // max items in LRU cache
         if(options.lruCacheMax)
@@ -27,10 +28,17 @@ class TTLItemLRUCacheDataLoader extends DataLoader {
         if(options.lruCacheTTLFromItem)
             mergedLRUCacheOptions.ttlFromItem = options.lruCacheTTLFromItem;
 
+        const cacheMap = new TTLItemLRUCache(mergedLRUCacheOptions);
         super(batchLoadByKey, {
             ...mergedDataLoaderOptions,
-            cacheMap: new TTLItemLRUCache(mergedLRUCacheOptions)
+            cacheMap: cacheMap
         });
+
+        this._cache = cacheMap; // expose cacheMap
+    }
+
+    get cache() {
+        return this._cache;
     }
 }
 

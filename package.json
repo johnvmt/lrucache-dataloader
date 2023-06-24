@@ -1,6 +1,6 @@
 {
   "name": "lrucache-dataloader",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Resolve dependencies using directed acyclic graph",
   "private": false,
   "author": {
@@ -15,7 +15,8 @@
   "main": "src/exports.js",
   "dependencies": {
     "dataloader": "^2.2.2",
-    "lru-cache": "^9.1.2"
+    "eventemitter3": "^5.0.1",
+    "lru-cache": "^10.0.0"
   },
   "devDependencies": {
     "object-hash": "^3.0.0"
