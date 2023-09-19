@@ -1,6 +1,6 @@
 {
   "name": "lrucache-dataloader",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Resolve dependencies using directed acyclic graph",
   "private": false,
   "author": {
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/johnvmt/component-dependency-resolver.git"
+    "url": "https://github.com/johnvmt/lrucache-dataloader"
   },
   "type": "module",
   "main": "src/exports.js",

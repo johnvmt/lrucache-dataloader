@@ -24,7 +24,7 @@ class TTLItemLRUCache extends LRUCache {
     once(...args) {
         return this._eventEmitter.once(...args);
     }
-    
+
     /**
      * Generally, converts the key to a scalar
      * @param key
@@ -96,7 +96,7 @@ class TTLItemLRUCache extends LRUCache {
      */
     get(key, ...args) {
         const cacheKey = this._cacheKey(key);
-        return super.get(cacheKey);
+        return  super.get(cacheKey);
     }
 
     /**
@@ -113,7 +113,7 @@ class TTLItemLRUCache extends LRUCache {
         const setResolvedValue = (value) => {
             const ttl = this._options.ttlFromItem
                 ? this._options.ttlFromItem(value, key)
-                : null; // default don't set TTL
+                : null; // use default TTL
 
             if(ttl)
                 super.set(cacheKey, value, {ttl, ...options});
@@ -125,7 +125,11 @@ class TTLItemLRUCache extends LRUCache {
         if(valueOrPromise instanceof Promise) { // passed item is a promise (eg: from dataloader)
             // temporarily set value as a promise; will be re-set when item resolves
             super.set(cacheKey, valueOrPromise, options);
-            valueOrPromise.then(setResolvedValue);
+
+            // set resolved value or error in the cache
+            valueOrPromise
+                .then(setResolvedValue)
+                .catch(setResolvedValue);
         }
         else // passed item is not a promise
             setResolvedValue(valueOrPromise);

@@ -37,6 +37,13 @@ class TTLItemLRUCacheDataLoader extends DataLoader {
         this._cache = cacheMap; // expose cacheMap
     }
 
+    async load(...args) {
+        const result = await super.load(...args);
+        if(result instanceof Error) // fixes issue where subsequent loads return the error instead of throwing it
+            throw result;
+        return result;
+    }
+
     get cache() {
         return this._cache;
     }
