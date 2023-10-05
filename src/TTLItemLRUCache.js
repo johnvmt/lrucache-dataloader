@@ -72,8 +72,10 @@ class TTLItemLRUCache extends LRUCache {
      */
     delete(key) {
         const cacheKey = this._cacheKey(key);
+        const value = super.get(cacheKey); // get before being deleted
         const subscriptionKey = TTLItemLRUCache._itemEmitterEventKey(cacheKey);
         super.delete(cacheKey);
+        this._eventEmitter.emit('cache:delete', key, value);
         this._eventEmitter.emit(subscriptionKey, 'delete');
     }
 
@@ -96,7 +98,7 @@ class TTLItemLRUCache extends LRUCache {
      */
     get(key, ...args) {
         const cacheKey = this._cacheKey(key);
-        return  super.get(cacheKey);
+        return super.get(cacheKey);
     }
 
     /**
@@ -119,6 +121,8 @@ class TTLItemLRUCache extends LRUCache {
                 super.set(cacheKey, value, {ttl, ...options});
             else
                 super.set(cacheKey, value, options);
+
+            this._eventEmitter.emit('cache:set', key, value);
             this._eventEmitter.emit(subscriptionKey, 'set', value);
         }
 
