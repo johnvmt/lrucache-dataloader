@@ -1,5 +1,5 @@
 import { LRUCache } from "lru-cache";
-import EventEmitter from "eventemitter3";
+import EventEmitter from "./SimpleEventEmitter.js";
 
 class TTLItemLRUCache extends LRUCache {
     constructor(options = {}) {
@@ -26,108 +26,40 @@ class TTLItemLRUCache extends LRUCache {
     }
 
     /**
-     * Generally, converts the key to a scalar
-     * @param key
-     * @returns {*}
-     * @private
-     */
-    _cacheKey(key) {
-        if(this._options.keyFn)
-            return this._options.keyFn(key);
-        else
-            return key;
-    }
-
-    /**
-     * Adds a subscription for a key
-     * @param key
-     * @param callback
-     * @returns {GenericSubscription}
-     */
-    subscribe(key, callback) {
-        const cacheKey = this._cacheKey(key);
-        const subscriptionKey = TTLItemLRUCache._itemEmitterEventKey(cacheKey);
-
-        if(this._eventEmitter.listenerCount(subscriptionKey) === 0)
-            this._eventEmitter.emit('subscription:on', key);
-
-        this.on(subscriptionKey, callback);
-
-        let canceled = false;
-        return () => {
-            if(!canceled) {
-                this.off(subscriptionKey, callback);
-
-                if(this._eventEmitter.listenerCount(subscriptionKey) === 0)
-                    this._eventEmitter.emit('subscription:off', key);
-
-                canceled = true;
-            }
-        }
-    }
-
-    /**
-     *
+     * Delete item from cache
      * @param key
      */
     delete(key) {
-        const cacheKey = this._cacheKey(key);
-        const subscriptionKey = TTLItemLRUCache._itemEmitterEventKey(cacheKey);
-        super.delete(cacheKey);
-        this._eventEmitter.emit('cache:delete', key);
-        this._eventEmitter.emit(subscriptionKey, 'delete');
+        const value = this.get(key);
+        super.delete(key);
+
+        this._emitItemAction("delete", key, value);
     }
 
     /**
-     *
-     * @param key
-     * @param args
-     * @returns {*}
-     */
-    has(key, ...args) {
-        const cacheKey = this._cacheKey(key);
-        return super.has(cacheKey);
-    }
-
-    /**
-     *
-     * @param key
-     * @param args
-     * @returns {*}
-     */
-    get(key, ...args) {
-        const cacheKey = this._cacheKey(key);
-        return super.get(cacheKey);
-    }
-
-    /**
-     *
+     * Set value in cache, optionally getting TTL from value
+     * Sets item in cache after promise resolves, or immediately if not a promise
      * @param key
      * @param valueOrPromise
      * @param options
      */
     set(key, valueOrPromise, options) {
-        // set item in cache after promise resolves, or immediately if not a promise
-        const cacheKey = this._cacheKey(key);
-        const subscriptionKey = TTLItemLRUCache._itemEmitterEventKey(cacheKey);
-
         const setResolvedValue = (value) => {
             const ttl = this._options.ttlFromItem
                 ? this._options.ttlFromItem(value, key)
                 : null; // use default TTL
 
             if(ttl)
-                super.set(cacheKey, value, {ttl, ...options});
+                super.set(key, value, {ttl, ...options});
             else
-                super.set(cacheKey, value, options);
+                super.set(key, value, options);
 
-            this._eventEmitter.emit('cache:set', key, value);
-            this._eventEmitter.emit(subscriptionKey, 'set', value);
+            this._emitItemAction("set", key, value);
         }
 
         if(valueOrPromise instanceof Promise) { // passed item is a promise (eg: from dataloader)
             // temporarily set value as a promise; will be re-set when item resolves
-            super.set(cacheKey, valueOrPromise, options);
+            super.set(key, valueOrPromise, options);
 
             // set resolved value or error in the cache
             valueOrPromise
@@ -138,8 +70,36 @@ class TTLItemLRUCache extends LRUCache {
             setResolvedValue(valueOrPromise);
     }
 
-    static _itemEmitterEventKey(cacheKey) {
-        return `item:${cacheKey}`;
+    /**
+     * Emit an action on a cache item to listeners
+     * @param action
+     * @param key
+     * @param value
+     * @private
+     */
+    _emitItemAction(action, key, value) {
+        this._eventEmitter.emit(TTLItemLRUCache._actionEmitterEventKey(action), key, value);
+        this._eventEmitter.emit(TTLItemLRUCache._itemEmitterEventKey(key), action, value);
+    }
+
+    /**
+     * Returns even key for ache action (set, delete)
+     * @param action
+     * @returns {string}
+     * @private
+     */
+    static _actionEmitterEventKey(action) {
+        return `cache:${action}`;
+    }
+
+    /**
+     * Returns event key for item
+     * @param key
+     * @returns {string}
+     * @private
+     */
+    static _itemEmitterEventKey(key) {
+        return `item:${key}`;
     }
 }
 

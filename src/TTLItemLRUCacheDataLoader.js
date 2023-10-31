@@ -12,9 +12,8 @@ class TTLItemLRUCacheDataLoader extends DataLoader {
         const mergedLRUCacheOptions = {};
 
         // use "hash" to hash an object used as a key
-        // handle this in the cache instead of the dataloader, as would be standard
         if(options.cacheKeyFn)
-            mergedLRUCacheOptions.keyFn = options.cacheKeyFn;
+            mergedDataLoaderOptions.cacheKeyFn = options.cacheKeyFn;
 
         // max items in LRU cache
         if(options.lruCacheMax)
