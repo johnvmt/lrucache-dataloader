@@ -25,15 +25,19 @@ class TTLItemLRUCache extends LRUCache {
         return this._eventEmitter.once(...args);
     }
 
+    listenerCount(...args) {
+        return this._eventEmitter.listenerCount(...args);
+    }
+
     /**
      * Delete item from cache
      * @param key
      */
     delete(key) {
-        const value = this.get(key);
+        const keyExisted = this.has(key);
         super.delete(key);
-
-        this._emitItemAction("delete", key, value);
+        if(keyExisted)
+            this._emitItemAction("delete", key, value);
     }
 
     /**
@@ -71,6 +75,40 @@ class TTLItemLRUCache extends LRUCache {
     }
 
     /**
+     * Adds a subscription for a key, returning a cancel function
+     * @param key
+     * @param callback
+     * @returns {(function(): void)|*}
+     */
+    subscribe(key, callback) {
+        const subscriptionKey = TTLItemLRUCache.itemEmitterEventKey(key);
+
+        if(this._eventEmitter.listenerCount(subscriptionKey) === 0)
+            this._eventEmitter.emit('subscription:on', key);
+
+        this.on(subscriptionKey, callback);
+
+        let canceled = false;
+
+        // returns cancel function
+        return () => {
+            if(!canceled) {
+                this.off(subscriptionKey, callback);
+
+                if(this._eventEmitter.listenerCount(subscriptionKey) === 0)
+                    this._eventEmitter.emit('subscription:off', key);
+
+                canceled = true;
+            }
+        }
+    }
+
+    subscribers(key) {
+        const subscriptionKey = TTLItemLRUCache.itemEmitterEventKey(key);
+        return this.listenerCount(subscriptionKey);
+    }
+
+    /**
      * Emit an action on a cache item to listeners
      * @param action
      * @param key
@@ -79,7 +117,7 @@ class TTLItemLRUCache extends LRUCache {
      */
     _emitItemAction(action, key, value) {
         this._eventEmitter.emit(TTLItemLRUCache._actionEmitterEventKey(action), key, value);
-        this._eventEmitter.emit(TTLItemLRUCache._itemEmitterEventKey(key), action, value);
+        this._eventEmitter.emit(TTLItemLRUCache.itemEmitterEventKey(key), action, value);
     }
 
     /**
@@ -98,7 +136,7 @@ class TTLItemLRUCache extends LRUCache {
      * @returns {string}
      * @private
      */
-    static _itemEmitterEventKey(key) {
+    static itemEmitterEventKey(key) {
         return `item:${key}`;
     }
 }

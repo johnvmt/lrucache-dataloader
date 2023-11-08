@@ -12,8 +12,11 @@ class TTLItemLRUCacheDataLoader extends DataLoader {
         const mergedLRUCacheOptions = {};
 
         // use "hash" to hash an object used as a key
-        if(options.cacheKeyFn)
-            mergedDataLoaderOptions.cacheKeyFn = options.cacheKeyFn;
+        const cacheKeyFn = options.cacheKeyFn
+            ? options.cacheKeyFn // user-supplied function (hash, etc.)
+            : key => key; // default, pass through key
+
+        mergedDataLoaderOptions.cacheKeyFn = cacheKeyFn; // pass cache key fn to dataloader
 
         // max items in LRU cache
         if(options.lruCacheMax)
@@ -34,6 +37,7 @@ class TTLItemLRUCacheDataLoader extends DataLoader {
         });
 
         this._cache = cacheMap; // expose cacheMap
+        this._cacheKeyFn = cacheKeyFn;
     }
 
     async load(...args) {
@@ -43,8 +47,37 @@ class TTLItemLRUCacheDataLoader extends DataLoader {
         return result;
     }
 
+    /**
+     * Extend dataloader, Returns cache key given the external key
+     * @param key
+     */
+    cacheKey(key) {
+        return this._cacheKeyFn(key);
+    }
+
     get cache() {
         return this._cache;
+    }
+
+    /**
+     * Adds a subscription for a key
+     * @param key
+     * @param callback
+     * @returns {GenericSubscription}
+     */
+    subscribe(key, callback) {
+        const cacheKey = this.cacheKey(key); // transform external key to cache key
+        return this.cache.subscribe(cacheKey, callback);
+    }
+
+    /**
+     * Returns number of subscribers for a key
+     * @param key
+     * @returns {*}
+     */
+    subscribers(key) {
+        const cacheKey = this.cacheKey(key); // transform external key to cache key
+        return this.cache.subscribers(cacheKey);
     }
 }
 

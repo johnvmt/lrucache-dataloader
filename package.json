@@ -1,6 +1,6 @@
 {
   "name": "lrucache-dataloader",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Resolve dependencies using directed acyclic graph",
   "private": false,
   "author": {

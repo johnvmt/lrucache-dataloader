@@ -59,6 +59,18 @@ class SimpleEventEmitter {
         }
     }
 
+    listenerCount(eventName) {
+        const onListenerCount = this._namedEventListeners.has(eventName)
+            ? this._namedEventListeners.get(eventName).size
+            : 0;
+
+        const onceListenerCount = this._namedEventOnceListeners.has(eventName)
+            ? this._namedEventOnceListeners.get(eventName).size
+            : 0;
+
+        return onListenerCount + onceListenerCount;
+    }
+
     emit(eventName, ...args) {
         // emit to all-event listeners first
         for(const allListener of this._allEventListeners) {
