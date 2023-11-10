@@ -37,7 +37,7 @@ class TTLItemLRUCache extends LRUCache {
         const keyExisted = this.has(key);
         super.delete(key);
         if(keyExisted)
-            this._emitItemAction("delete", key, value);
+            this._emitItemAction("delete", key);
     }
 
     /**
