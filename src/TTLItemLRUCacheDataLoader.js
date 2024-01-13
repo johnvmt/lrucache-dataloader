@@ -16,6 +16,18 @@ class TTLItemLRUCacheDataLoader extends DataLoader {
             ? options.cacheKeyFn // user-supplied function (hash, etc.)
             : key => key; // default, pass through key
 
+        // pass options to DataLoader
+        for(let optionKey of [
+            'batch',
+            'maxBatchSize',
+            'batchScheduleFn',
+            'cache',
+            'name'
+        ]) {
+            if(optionKey in options)
+                mergedDataLoaderOptions[optionKey] = options[optionKey];
+        }
+
         mergedDataLoaderOptions.cacheKeyFn = cacheKeyFn; // pass cache key fn to dataloader
 
         // max items in LRU cache
